@@ -1,0 +1,47 @@
+version: '3.8'
+networks:
+  backend:
+    driver: bridge
+services:
+  analysis-api:
+    container_name: analysis-api
+    image: analysis-image
+    env_file:
+      - .env
+    environment:
+      DB_HOST: '${DB_ANALYSIS_HOST}'
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "5220:5220"
+      - "5221:5221"
+    networks:
+      - backend
+    depends_on:
+      - analysis-db
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:5221/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  analysis-db:
+    image: postgres:15
+    container_name: analysis-db
+    env_file:
+      - .env
+    environment:
+      PGPASSWORD: '${DB_PASSWORD}'
+      POSTGRES_DB: '${DB_ANALYSIS_NAME}'
+      PGUSER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    volumes:
+      - analysis-db:/var/lib/postgresql/data
+    ports:
+      - "5437:5432"
+    networks:
+      - backend
+    restart: always
+
+volumes:
+  analysis-db:
