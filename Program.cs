@@ -81,7 +81,7 @@ app.UseSwaggerUI(options =>
         options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
             description.GroupName.ToUpperInvariant());
     }
-    options.RoutePrefix = "api/swagger_article";
+    options.RoutePrefix = "api/swagger_event";
 });
 
 

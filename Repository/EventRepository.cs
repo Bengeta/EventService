@@ -55,12 +55,16 @@ public class EventRepository : IEventRepository
         }
     }
 
-    public async Task<ResponseModel<PaginatedListModel<GetEventResponse>>> GetEvents(int page, int pageSize)
+    public async Task<ResponseModel<PaginatedListModel<GetEventResponse>>> GetEvents(int page, int pageSize, GetEventsRequest request)
     {
         try
         {
             await using var context = new ApplicationContext(_configuration);
-            var labaratories = await context.Events.ToListAsync();
+            var labaratories = await context.Events
+            .Where(x => x.EventType == request.EventType &&
+             (!string.IsNullOrEmpty(request.SearchString) && x.Title.Contains(request.SearchString)))
+             .OrderByDescending(x => x.Id)
+            .ToListAsync();
 
             var labaratoriesResponse = _mapper.Map<List<GetEventResponse>>(labaratories);
             var pagedLabaratories = PagedList<GetEventResponse>.ToPagedList(labaratoriesResponse, page, pageSize);
