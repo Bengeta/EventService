@@ -11,13 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Listen(IPAddress.Any, 5220, cfg =>
+    serverOptions.Listen(IPAddress.Any, 4220, cfg =>
               {
                   cfg.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
               });
 
 
-    serverOptions.Listen(IPAddress.Any, 5221, cfg =>
+    serverOptions.Listen(IPAddress.Any, 4221, cfg =>
                 {
                     cfg.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
                 });
