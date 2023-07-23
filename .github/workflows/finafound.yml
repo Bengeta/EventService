@@ -1,0 +1,43 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - finalyfound
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      keylink: ${{ secrets.FF_KEYLINK }}
+      hostname: ${{ secrets.FF_HOSTNAME }}
+      ssh_port: ${{ secrets.FF_SSH_PORT }}
+      appsettings: ${{ secrets.FF_APPSETTINGS }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download App Settings
+        run: wget -O ./data/appsettings.json "$appsettings"
+
+      - name: Build Docker Image
+        run: docker build -t event-image .
+
+      - name: Save Image as Tar File
+        run: docker save event-image -o image.tar
+
+      - name: Download SSH key
+        run: wget -O k.key "$keylink";chmod 400 k.key
+
+      - name: Deploy to Server
+        run: rsync -ratlz --rsh="ssh -i k.key -o StrictHostKeyChecking=no -l ubuntu -p $ssh_port" image.tar ubuntu@$hostname:/tmp
+
+      - name: Deploy Docker Compose to Server
+        run: rsync -ratlz --rsh="ssh -i k.key -o StrictHostKeyChecking=no -l ubuntu -p $ssh_port" ./docker-compose-event.yml ubuntu@$hostname:./docker-compose-event.yml
+
+      - name: Start Backend
+        run:
+          sudo ssh -i k.key -o StrictHostKeyChecking=no ubuntu@$hostname -p $ssh_port
+          "docker load -i /tmp/image.tar;
+          docker compose -f docker-compose-event.yml up -d;
+          yes | docker image prune &"
